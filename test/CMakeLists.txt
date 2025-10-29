@@ -30,7 +30,6 @@ target_link_libraries(depth_clustering_test
                     image_labeler
                     ground_remove
                     difference
-                    )
                     ${PCL_LIBRARIES}
                     ${OpenCV_LIBS}
                     ${GTEST_LIBRARIES})
