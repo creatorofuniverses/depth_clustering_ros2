@@ -9,13 +9,13 @@
 xhost +local:docker
 ```
 
-**2. Build and run:**
+**2. Build and run (configured for Ouster OS1-64 by default):**
 ```bash
 docker-compose build
 docker-compose up depth_clustering
 ```
 
-That's it! The node is now running and waiting for LiDAR data on `/velodyne_points`.
+That's it! The node is now running and waiting for LiDAR data on `/ouster/points` or `/velodyne_points`.
 
 ### Test with Sample Data
 
@@ -57,44 +57,58 @@ cd ~/ros2_ws
 source /opt/ros/humble/setup.bash
 colcon build --symlink-install
 
-# Run
+# Run (Ouster OS1-64 - Default)
 source ~/ros2_ws/install/setup.bash
-ros2 run depth_clustering show_objects_node --num_beams 64 --angle 10
+ros2 run depth_clustering show_objects_node --lidar OS1-64 --angle 10
 ```
 
 ---
 
 ## 📊 Supported Sensors
 
-| Sensor | Beams | Command |
-|--------|-------|---------|
-| Velodyne VLP-16 | 16 | `--num_beams 16` |
-| Velodyne HDL-32 | 32 | `--num_beams 32` |
-| Velodyne HDL-64 | 64 | `--num_beams 64` |
+| Sensor | Beams | Resolution | Command |
+|--------|-------|------------|---------|
+| **Ouster OS1-64** ⭐ | 64 | 1024 | `--lidar OS1-64` |
+| **Ouster OS1-64 HighRes** | 64 | 2048 | `--lidar OS1-64-HIGHRES` |
+| Velodyne VLP-16 | 16 | 870 | `--lidar VLP-16` |
+| Velodyne HDL-32 | 32 | 870 | `--lidar HDL-32` |
+| Velodyne HDL-64 | 64 | 870 | `--lidar HDL-64` |
 
 ---
 
 ## 🎯 Common Use Cases
 
-### 1. Real-time Clustering
+### 1. Real-time Clustering (Ouster)
 ```bash
-ros2 run depth_clustering show_objects_node --num_beams 64 --angle 10
+ros2 run depth_clustering show_objects_node --lidar OS1-64 --angle 10 \
+    --ros-args -r /velodyne_points:=/ouster/points
 ```
 
-### 2. Save Clusters to Disk
+### 2. Real-time Clustering (Velodyne)
 ```bash
-ros2 run depth_clustering save_clusters_node --num_beams 64 --angle 10
+ros2 run depth_clustering show_objects_node --lidar HDL-64 --angle 10
 ```
 
-### 3. Custom Topic
+### 3. Save Clusters to Disk
 ```bash
-ros2 run depth_clustering show_objects_node --num_beams 32 --angle 8 \
-    --ros-args -r /velodyne_points:=/my_lidar_topic
+ros2 run depth_clustering save_clusters_node --lidar OS1-64 --angle 10
 ```
 
-### 4. Adjust Sensitivity
-- **More clusters** (higher sensitivity): `--angle 5`
-- **Fewer clusters** (lower sensitivity): `--angle 15`
+### 4. High-Resolution Mode (Ouster)
+```bash
+ros2 run depth_clustering show_objects_node --lidar OS1-64-HIGHRES --angle 8
+```
+
+### 5. Custom Topic Remapping
+```bash
+ros2 run depth_clustering show_objects_node --lidar OS1-64 --angle 8 \
+    --ros-args -r /velodyne_points:=/my_custom_lidar_topic
+```
+
+### 6. Adjust Sensitivity
+- **More clusters** (higher sensitivity): `--angle 5` to `--angle 7`
+- **Fewer clusters** (lower sensitivity): `--angle 12` to `--angle 15`
+- **Default** (balanced): `--angle 10`
 
 ---
 
@@ -110,8 +124,10 @@ ros2 run depth_clustering show_objects_node --num_beams 32 --angle 8 \
 
 - **X11 Issues?** Run: `xhost +local:docker` before Docker commands
 - **No visualization?** Make sure Qt libraries are installed
-- **Wrong results?** Verify `--num_beams` matches your sensor
+- **Wrong results?** Verify `--lidar` matches your sensor type
+- **Using Ouster?** Make sure to remap topic: `--ros-args -r /velodyne_points:=/ouster/points`
 - **Topic not found?** Check with: `ros2 topic list`
+- **Missing ring field?** Verify with: `ros2 topic echo /ouster/points --field fields`
 
 ---
 
@@ -119,6 +135,12 @@ ros2 run depth_clustering show_objects_node --num_beams 32 --angle 8 \
 
 - **For Docker**: Docker, docker-compose, X11
 - **For Native**: ROS2 Humble, Ubuntu 22.04, Qt5, PCL
+
+## 🎓 Sensor-Specific Guides
+
+- **Ouster Sensors**: See [examples/ouster_examples.md](examples/ouster_examples.md)
+- **Velodyne Sensors**: Works with legacy `--num_beams` argument
+- **All Sensors**: See [README_ROS2.md](README_ROS2.md) for complete guide
 
 ---
 

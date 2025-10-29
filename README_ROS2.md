@@ -30,6 +30,8 @@ The ROS2 migration brings modern C++ standards and improved performance to the d
 - Velodyne VLP-16 (16 beams)
 - Velodyne HDL-32 (32 beams)
 - Velodyne HDL-64 (64 beams)
+- **Ouster OS1-64 / OS2-64 (64 beams)** ⭐ Default configuration
+- Ouster OS1-64 High-Resolution mode
 
 ---
 
@@ -107,7 +109,7 @@ docker-compose --profile playback up rosbag_player
 docker build -t depth_clustering:ros2 .
 ```
 
-**Run:**
+**Run (Ouster OS1-64):**
 ```bash
 docker run -it --rm \
   --net=host \
@@ -116,7 +118,19 @@ docker run -it --rm \
   -v /tmp/.X11-unix:/tmp/.X11-unix:rw \
   depth_clustering:ros2 \
   bash -c "source /ros2_ws/install/setup.bash && \
-           ros2 run depth_clustering show_objects_node --num_beams 64 --angle 10"
+           ros2 run depth_clustering show_objects_node --lidar OS1-64 --angle 10"
+```
+
+**Run (Velodyne HDL-64):**
+```bash
+docker run -it --rm \
+  --net=host \
+  --privileged \
+  -e DISPLAY=$DISPLAY \
+  -v /tmp/.X11-unix:/tmp/.X11-unix:rw \
+  depth_clustering:ros2 \
+  bash -c "source /ros2_ws/install/setup.bash && \
+           ros2 run depth_clustering show_objects_node --lidar HDL-64 --angle 10"
 ```
 
 ---
@@ -193,16 +207,34 @@ source ~/ros2_ws/install/setup.bash
 
 This node performs clustering and displays results in a Qt-based 3D viewer.
 
-**Basic usage:**
+**Basic usage (Ouster OS1-64 - Default):**
 ```bash
-ros2 run depth_clustering show_objects_node --num_beams 64 --angle 10
+ros2 run depth_clustering show_objects_node --lidar OS1-64 --angle 10
 ```
 
 **Parameters:**
-- `--num_beams`: Number of LiDAR beams [16, 32, 64] (required)
+- `--lidar`: LiDAR type [VLP-16, HDL-32, HDL-64, OS1-64, OS1-64-HIGHRES] (default: OS1-64)
+- `--num_beams`: (Legacy) Number of LiDAR beams [16, 32, 64] for Velodyne
 - `--angle`: Angle threshold in degrees for object separation (default: 10)
 
-**Example for VLP-16:**
+**Examples:**
+
+Ouster OS1-64 (standard 1024 resolution):
+```bash
+ros2 run depth_clustering show_objects_node --lidar OS1-64 --angle 10
+```
+
+Ouster OS1-64 High-Resolution (2048):
+```bash
+ros2 run depth_clustering show_objects_node --lidar OS1-64-HIGHRES --angle 8
+```
+
+Velodyne HDL-64:
+```bash
+ros2 run depth_clustering show_objects_node --lidar HDL-64 --angle 10
+```
+
+Velodyne VLP-16 (legacy format):
 ```bash
 ros2 run depth_clustering show_objects_node --num_beams 16 --angle 8
 ```
@@ -211,9 +243,14 @@ ros2 run depth_clustering show_objects_node --num_beams 16 --angle 8
 
 This node saves detected clusters to disk for offline analysis.
 
-**Usage:**
+**Usage (Ouster):**
 ```bash
-ros2 run depth_clustering save_clusters_node --num_beams 64 --angle 10
+ros2 run depth_clustering save_clusters_node --lidar OS1-64 --angle 10
+```
+
+**Usage (Velodyne):**
+```bash
+ros2 run depth_clustering save_clusters_node --lidar HDL-64 --angle 10
 ```
 
 Clusters are saved to:
@@ -227,12 +264,20 @@ Clusters are saved to:
 ros2 launch depth_clustering depth_clustering.launch.py
 ```
 
-**With custom parameters:**
+**With custom parameters (Ouster):**
 ```bash
 ros2 launch depth_clustering depth_clustering.launch.py \
-    num_beams:=32 \
+    lidar:=OS1-64-HIGHRES \
+    angle:=8 \
+    topic_clouds:=/ouster/points
+```
+
+**With custom parameters (Velodyne):**
+```bash
+ros2 launch depth_clustering depth_clustering.launch.py \
+    lidar:=HDL-32 \
     angle:=12 \
-    topic_clouds:=/points
+    topic_clouds:=/velodyne_points
 ```
 
 ---
@@ -281,18 +326,24 @@ docker-compose --profile visualization up rviz2
 
 ### Topic Configuration
 
-By default, the nodes subscribe to `/velodyne_points`. To change:
+By default, the nodes subscribe to `/velodyne_points` (legacy) or `/ouster/points` (for Ouster drivers).
 
-**Edit the source:**
-```cpp
-// In show_objects_node.cpp or save_clusters_node.cpp
-string topic_clouds = "/your_custom_topic";
+**Topic remapping for Ouster:**
+```bash
+ros2 run depth_clustering show_objects_node --lidar OS1-64 --angle 10 \
+    --ros-args -r /velodyne_points:=/ouster/points
 ```
 
-**Or use topic remapping:**
+**Topic remapping for custom topics:**
 ```bash
-ros2 run depth_clustering show_objects_node --num_beams 64 --angle 10 \
+ros2 run depth_clustering show_objects_node --lidar OS1-64 --angle 10 \
     --ros-args -r /velodyne_points:=/your_custom_topic
+```
+
+**Edit the source (permanent change):**
+```cpp
+// In show_objects_node.cpp or save_clusters_node.cpp
+string topic_clouds = "/ouster/points";  // or your custom topic
 ```
 
 ### Clustering Parameters
@@ -363,9 +414,13 @@ sudo apt-get install qt5-default qtbase5-dev libqglviewer-dev-qt5
 3. Check QoS compatibility
 
 **Segmentation fault:**
-- Verify LiDAR data has `ring` field
+- Verify LiDAR data has `ring` field (required!)
+  ```bash
+  ros2 topic echo /ouster/points --field fields  # Check for 'ring' field
+  ```
 - Check point cloud is not empty
-- Ensure correct `num_beams` parameter
+- Ensure correct `--lidar` parameter matches your sensor
+- For Ouster: Verify driver is publishing ring/channel information
 
 **Poor clustering results:**
 - Adjust `--angle` parameter (lower = more sensitive)
@@ -395,9 +450,14 @@ sudo usermod -aG docker $USER
 ## 📚 Additional Resources
 
 ### Example Datasets
-- [KITTI Dataset](http://www.cvlibs.net/datasets/kitti/)
-- [nuScenes Dataset](https://www.nuscenes.org/)
-- [SemanticKITTI](http://semantic-kitti.org/)
+- [KITTI Dataset](http://www.cvlibs.net/datasets/kitti/) - Velodyne HDL-64
+- [nuScenes Dataset](https://www.nuscenes.org/) - Various sensors
+- [SemanticKITTI](http://semantic-kitti.org/) - Velodyne HDL-64
+
+### Ouster Resources
+- [Ouster Examples Guide](examples/ouster_examples.md) - Detailed Ouster configuration
+- [Ouster ROS2 Driver](https://github.com/ouster-lidar/ouster-ros)
+- [Ouster Configuration File](config/ouster_os1_64.cfg)
 
 ### ROS2 Documentation
 - [ROS2 Humble Docs](https://docs.ros.org/en/humble/)

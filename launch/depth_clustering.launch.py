@@ -13,10 +13,16 @@ def generate_launch_description():
     """Generate launch description for depth clustering."""
     
     # Declare launch arguments
+    lidar_type_arg = DeclareLaunchArgument(
+        'lidar',
+        default_value='OS1-64',
+        description='LiDAR type [VLP-16, HDL-32, HDL-64, OS1-64, OS1-64-HIGHRES]'
+    )
+    
     num_beams_arg = DeclareLaunchArgument(
         'num_beams',
-        default_value='64',
-        description='Number of vertical beams in laser [16, 32, 64]'
+        default_value='',
+        description='(Legacy) Number of vertical beams in laser [16, 32, 64]'
     )
     
     angle_arg = DeclareLaunchArgument(
@@ -27,7 +33,7 @@ def generate_launch_description():
     
     topic_clouds_arg = DeclareLaunchArgument(
         'topic_clouds',
-        default_value='/velodyne_points',
+        default_value='/ouster/points',
         description='Point cloud topic name'
     )
     
@@ -41,7 +47,7 @@ def generate_launch_description():
     show_objects_node = ExecuteProcess(
         cmd=[
             'ros2', 'run', 'depth_clustering', 'show_objects_node',
-            '--num_beams', LaunchConfiguration('num_beams'),
+            '--lidar', LaunchConfiguration('lidar'),
             '--angle', LaunchConfiguration('angle')
         ],
         output='screen'
@@ -57,6 +63,7 @@ def generate_launch_description():
     )
 
     return LaunchDescription([
+        lidar_type_arg,
         num_beams_arg,
         angle_arg,
         topic_clouds_arg,

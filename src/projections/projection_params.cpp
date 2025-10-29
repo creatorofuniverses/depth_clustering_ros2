@@ -205,6 +205,38 @@ std::unique_ptr<ProjectionParams> ProjectionParams::HDL_64() {
   return mem_utils::make_unique<ProjectionParams>(params);
 }
 
+std::unique_ptr<ProjectionParams> ProjectionParams::OS1_64() {
+  auto params = ProjectionParams();
+  // Ouster OS1-64: 1024 horizontal pixels, 360° horizontal FOV
+  params.SetSpan(SpanParams(-180_deg, 180_deg, 1024),
+                 SpanParams::Direction::HORIZONTAL);
+  // Ouster OS1-64: 64 uniform beams, +16.6° to -16.6° (33.2° vertical FOV)
+  params.SetSpan(SpanParams(16.6_deg, -16.6_deg, 64),
+                 SpanParams::Direction::VERTICAL);
+  params.FillCosSin();
+  if (!params.valid()) {
+    fprintf(stderr, "ERROR: params are not valid!\n");
+    return nullptr;
+  }
+  return mem_utils::make_unique<ProjectionParams>(params);
+}
+
+std::unique_ptr<ProjectionParams> ProjectionParams::OS1_64_HIGHRES() {
+  auto params = ProjectionParams();
+  // Ouster OS1-64: 2048 horizontal pixels (high resolution mode)
+  params.SetSpan(SpanParams(-180_deg, 180_deg, 2048),
+                 SpanParams::Direction::HORIZONTAL);
+  // Ouster OS1-64: 64 uniform beams, +16.6° to -16.6° (33.2° vertical FOV)
+  params.SetSpan(SpanParams(16.6_deg, -16.6_deg, 64),
+                 SpanParams::Direction::VERTICAL);
+  params.FillCosSin();
+  if (!params.valid()) {
+    fprintf(stderr, "ERROR: params are not valid!\n");
+    return nullptr;
+  }
+  return mem_utils::make_unique<ProjectionParams>(params);
+}
+
 std::unique_ptr<ProjectionParams> ProjectionParams::FullSphere(
     const Radians& discretization) {
   auto params = ProjectionParams();

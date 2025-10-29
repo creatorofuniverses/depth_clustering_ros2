@@ -52,30 +52,65 @@ int main(int argc, char* argv[]) {
       "int");
   TCLAP::ValueArg<int> num_beams_arg(
       "", "num_beams", "Num of vertical beams in laser. One of: [16, 32, 64].",
-      true, 0, "int");
+      false, 0, "int");
+  TCLAP::ValueArg<std::string> lidar_type_arg(
+      "", "lidar", 
+      "LiDAR type. One of: [VLP-16, HDL-32, HDL-64, OS1-64, OS1-64-HIGHRES].",
+      false, "OS1-64", "string");
 
   cmd.add(angle_arg);
   cmd.add(num_beams_arg);
+  cmd.add(lidar_type_arg);
   cmd.parse(argc, argv);
 
   Radians angle_tollerance = Radians::FromDegrees(angle_arg.getValue());
 
   std::unique_ptr<ProjectionParams> proj_params_ptr = nullptr;
-  switch (num_beams_arg.getValue()) {
-    case 16:
+  
+  // If lidar type is specified, use it; otherwise fall back to num_beams
+  std::string lidar_type = lidar_type_arg.getValue();
+  if (lidar_type_arg.isSet()) {
+    if (lidar_type == "VLP-16") {
       proj_params_ptr = ProjectionParams::VLP_16();
-      break;
-    case 32:
+    } else if (lidar_type == "HDL-32") {
       proj_params_ptr = ProjectionParams::HDL_32();
-      break;
-    case 64:
+    } else if (lidar_type == "HDL-64") {
       proj_params_ptr = ProjectionParams::HDL_64();
-      break;
+    } else if (lidar_type == "OS1-64" || lidar_type == "OUSTER-64") {
+      proj_params_ptr = ProjectionParams::OS1_64();
+      fprintf(stderr, "INFO: Using Ouster OS1-64 configuration (1024 cols)\n");
+    } else if (lidar_type == "OS1-64-HIGHRES" || lidar_type == "OUSTER-64-HIGHRES") {
+      proj_params_ptr = ProjectionParams::OS1_64_HIGHRES();
+      fprintf(stderr, "INFO: Using Ouster OS1-64 high-res configuration (2048 cols)\n");
+    } else {
+      fprintf(stderr,
+              "ERROR: unknown lidar type: %s. Should be one of [VLP-16, HDL-32, HDL-64, OS1-64, OS1-64-HIGHRES].\n",
+              lidar_type.c_str());
+      exit(1);
+    }
+  } else if (num_beams_arg.isSet()) {
+    // Legacy num_beams argument (defaults to Velodyne)
+    switch (num_beams_arg.getValue()) {
+      case 16:
+        proj_params_ptr = ProjectionParams::VLP_16();
+        break;
+      case 32:
+        proj_params_ptr = ProjectionParams::HDL_32();
+        break;
+      case 64:
+        proj_params_ptr = ProjectionParams::HDL_64();
+        break;
+      default:
+        fprintf(stderr,
+                "ERROR: wrong number of beams: %d. Should be in [16, 32, 64].\n",
+                num_beams_arg.getValue());
+        exit(1);
+    }
   }
+  
   if (!proj_params_ptr) {
     fprintf(stderr,
-            "ERROR: wrong number of beams: %d. Should be in [16, 32, 64].\n",
-            num_beams_arg.getValue());
+            "ERROR: Could not initialize projection parameters. Use --lidar or --num_beams.\n");
     exit(1);
   }
 

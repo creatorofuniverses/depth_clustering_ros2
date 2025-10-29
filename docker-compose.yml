@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  # Main depth clustering service
+  # Main depth clustering service (configured for Ouster OS1-64)
   depth_clustering:
     build:
       context: .
@@ -20,7 +20,7 @@ services:
       - ./output:/output:rw
     command: >
       bash -c "source /ros2_ws/install/setup.bash &&
-               ros2 run depth_clustering show_objects_node --num_beams 64 --angle 10"
+               ros2 run depth_clustering show_objects_node --lidar OS1-64 --angle 10"
 
   # ROS2 bag player (for testing with recorded data)
   rosbag_player:

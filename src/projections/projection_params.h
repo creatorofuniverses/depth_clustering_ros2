@@ -192,6 +192,20 @@ class ProjectionParams {
    */
   static std::unique_ptr<ProjectionParams> HDL_64_EQUAL();
   /**
+   * @brief      Default parameters for Ouster OS1-64 / OS2-64
+   *             Uniform 64 beams, 33.2° vertical FOV, 1024 horizontal resolution
+   *
+   * @return     A pointer to parameters
+   */
+  static std::unique_ptr<ProjectionParams> OS1_64();
+  /**
+   * @brief      Default parameters for Ouster OS1-64 / OS2-64 with higher resolution
+   *             Uniform 64 beams, 33.2° vertical FOV, 2048 horizontal resolution
+   *
+   * @return     A pointer to parameters
+   */
+  static std::unique_ptr<ProjectionParams> OS1_64_HIGHRES();
+  /**
    * @brief      Default parameters for Velodyne from config file
    *
    * @return     A pointer to parameters
