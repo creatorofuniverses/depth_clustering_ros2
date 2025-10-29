@@ -25,8 +25,6 @@ target_link_libraries(show_objects_node
                       image_labeler
                       projections
                       ground_remove
-                      visualization
-                      ${MY_QT_LIBRARIES}
                       ${Boost_LIBRARIES}
                       ${rclcpp_LIBRARIES}
                       ${PCL_LIBRARIES}

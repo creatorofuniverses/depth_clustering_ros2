@@ -75,53 +75,12 @@ endif()
 find_package(Threads REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(OpenCV REQUIRED)
-find_package(OpenGL REQUIRED)
 find_package(Boost REQUIRED COMPONENTS system filesystem regex program_options)
 find_package(PCL QUIET COMPONENTS common io)
-find_package(QGLViewer REQUIRED)
 
-# find correct qt version
-if(${DISTRO} MATCHES "14.04")
-  find_package(Qt4 REQUIRED COMPONENTS QtCore QtXml QtOpenGL QtGui QtMultimedia)
-  include(${QT_USE_FILE})
-  include_directories(${QT_INCLUDES})
-  set(MY_QT_LIBRARIES
-      Qt4::QtCore
-      Qt4::QtXml
-      Qt4::QtOpenGL
-      Qt4::QtGui)
-elseif(${DISTRO} MATCHES "16.04" OR ${DISTRO} MATCHES "18.04" OR ${DISTRO} MATCHES "22.04")
-  find_package(Qt5 REQUIRED COMPONENTS Core Xml OpenGL Gui Widgets)
-  include_directories(${Qt5Core_INCLUDE_DIRS}
-                      ${Qt5Xml_INCLUDE_DIRS}
-                      ${Qt5Gui_INCLUDE_DIRS}
-                      ${Qt5Widgets_INCLUDE_DIRS}
-                      ${Qt5OpenGL_INCLUDE_DIRS})
-  set(MY_QT_LIBRARIES
-      ${Qt5Widgets_LIBRARIES}
-      ${Qt5Core_LIBRARIES}
-      ${Qt5Gui_LIBRARIES}
-      ${Qt5Xml_LIBRARIES}
-      ${Qt5OpenGL_LIBRARIES})
-else()
-  # Default to Qt5 for newer distributions
-  find_package(Qt5 REQUIRED COMPONENTS Core Xml OpenGL Gui Widgets)
-  include_directories(${Qt5Core_INCLUDE_DIRS}
-                      ${Qt5Xml_INCLUDE_DIRS}
-                      ${Qt5Gui_INCLUDE_DIRS}
-                      ${Qt5Widgets_INCLUDE_DIRS}
-                      ${Qt5OpenGL_INCLUDE_DIRS})
-  set(MY_QT_LIBRARIES
-      ${Qt5Widgets_LIBRARIES}
-      ${Qt5Core_LIBRARIES}
-      ${Qt5Gui_LIBRARIES}
-      ${Qt5Xml_LIBRARIES}
-      ${Qt5OpenGL_LIBRARIES})
-endif()
-
-# some status messages
-message(STATUS "Linking against Qt libs: ${MY_QT_LIBRARIES}")
-message(STATUS "Linking against QGlViewer lib: ${QGLVIEWER_LIBRARY}")
+# Qt and QGLViewer disabled for headless ROS2 nodes
+# find_package(OpenGL REQUIRED)
+# find_package(QGLViewer REQUIRED)
 
 ## Find ament_cmake and ROS2 packages
 find_package(ament_cmake QUIET)
@@ -159,15 +118,11 @@ endif()
 
 include_directories(
   src
-  # for QT moc files
   ${PROJECT_BINARY_DIR}/src
-  # dependencies we have no control over
   SYSTEM ${EIGEN3_INCLUDE_DIR}
   SYSTEM ${Boost_INCLUDE_DIRS}
   SYSTEM ${PCL_INCLUDE_DIRS}
   SYSTEM ${OpenCV_INCLUDE_DIRS}
-  SYSTEM ${OpenGL_INCLUDE_DIRS}
-  SYSTEM ${QGLVIEWER_INCLUDE_DIR}
 )
 
 add_subdirectory(src)

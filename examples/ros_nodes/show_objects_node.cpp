@@ -20,8 +20,6 @@
 
 #include <rclcpp/rclcpp.hpp>
 
-#include <qapplication.h>
-
 #include <string>
 #include <memory>
 
@@ -32,7 +30,6 @@
 #include "projections/ring_projection.h"
 #include "projections/spherical_projection.h"
 #include "utils/radians.h"
-#include "visualization/visualizer.h"
 
 #include "tclap/CmdLine.h"
 
@@ -114,16 +111,12 @@ int main(int argc, char* argv[]) {
     exit(1);
   }
 
-  QApplication application(argc, argv);
-
   rclcpp::init(argc, argv);
   auto node = std::make_shared<rclcpp::Node>("show_objects_node");
 
   string topic_clouds = "/velodyne_points";
 
   CloudOdomRosSubscriber subscriber(node, *proj_params_ptr, topic_clouds);
-  Visualizer visualizer;
-  visualizer.show();
 
   int min_cluster_size = 20;
   int max_cluster_size = 100000;
@@ -139,23 +132,17 @@ int main(int argc, char* argv[]) {
 
   subscriber.AddClient(&depth_ground_remover);
   depth_ground_remover.AddClient(&clusterer);
-  clusterer.AddClient(visualizer.object_clouds_client());
-  subscriber.AddClient(&visualizer);
 
-  fprintf(stderr, "INFO: Running with angle tollerance: %f degrees\n",
+  fprintf(stderr, "INFO: Running with angle tolerance: %f degrees\n",
           angle_tollerance.ToDegrees());
+  fprintf(stderr, "INFO: Listening on topic: %s\n", topic_clouds.c_str());
+  fprintf(stderr, "INFO: Running headless (no visualization)\n");
 
   subscriber.StartListeningToRos();
   
-  // Create executor for ROS2 spinning in separate thread
-  rclcpp::executors::SingleThreadedExecutor executor;
-  executor.add_node(node);
-  std::thread spin_thread([&executor]() { executor.spin(); });
-
-  auto exit_code = application.exec();
-
-  // Cleanup: shutdown ROS2
+  // Spin ROS2
+  rclcpp::spin(node);
   rclcpp::shutdown();
-  spin_thread.join();
-  return exit_code;
+  
+  return 0;
 }

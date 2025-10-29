@@ -5,7 +5,7 @@ FROM ros:humble-perception
 ENV DEBIAN_FRONTEND=noninteractive
 ENV ROS_DISTRO=humble
 
-# Install dependencies
+# Install dependencies (Qt and visualization removed for headless deployment)
 RUN apt-get update && apt-get install -y \
     build-essential \
     cmake \
@@ -14,17 +14,10 @@ RUN apt-get update && apt-get install -y \
     libeigen3-dev \
     libopencv-dev \
     libpcl-dev \
-    libqglviewer-dev-qt5 \
-    qtbase5-dev \
-    qtdeclarative5-dev \
-    libqt5opengl5-dev \
-    qt5-qmake \
-    qtbase5-dev-tools \
     ros-${ROS_DISTRO}-tf2-eigen \
     ros-${ROS_DISTRO}-message-filters \
     ros-${ROS_DISTRO}-sensor-msgs \
     ros-${ROS_DISTRO}-nav-msgs \
-    ros-${ROS_DISTRO}-rviz2 \
     ros-${ROS_DISTRO}-pcl-ros \
     && rm -rf /var/lib/apt/lists/*
 
