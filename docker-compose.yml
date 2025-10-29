@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  # Main depth clustering service
+  depth_clustering:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: depth_clustering:ros2
+    container_name: depth_clustering_node
+    network_mode: host
+    privileged: true
+    environment:
+      - DISPLAY=${DISPLAY}
+      - QT_X11_NO_MITSHM=1
+      - ROS_DOMAIN_ID=0
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ./data:/data:rw
+      - ./output:/output:rw
+    command: >
+      bash -c "source /ros2_ws/install/setup.bash &&
+               ros2 run depth_clustering show_objects_node --num_beams 64 --angle 10"
+
+  # ROS2 bag player (for testing with recorded data)
+  rosbag_player:
+    image: ros:humble-perception
+    container_name: rosbag_player
+    network_mode: host
+    environment:
+      - ROS_DOMAIN_ID=0
+    volumes:
+      - ./data:/data:ro
+    command: >
+      bash -c "source /opt/ros/humble/setup.bash &&
+               ros2 bag play /data/your_bag_file"
+    profiles:
+      - playback
+
+  # RViz2 for visualization
+  rviz2:
+    image: ros:humble-perception
+    container_name: rviz2
+    network_mode: host
+    privileged: true
+    environment:
+      - DISPLAY=${DISPLAY}
+      - QT_X11_NO_MITSHM=1
+      - ROS_DOMAIN_ID=0
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ./config:/config:ro
+    command: >
+      bash -c "source /opt/ros/humble/setup.bash &&
+               rviz2 -d /config/depth_clustering.rviz"
+    profiles:
+      - visualization
+
+networks:
+  default:
+    driver: bridge

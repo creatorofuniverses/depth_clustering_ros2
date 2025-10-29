@@ -18,9 +18,10 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-#include <ros/ros.h>
+#include <rclcpp/rclcpp.hpp>
 
 #include <string>
+#include <memory>
 
 #include "ros_bridge/cloud_odom_ros_subscriber.h"
 
@@ -74,12 +75,12 @@ int main(int argc, char* argv[]) {
     exit(1);
   }
 
-  ros::init(argc, argv, "dynamics_processing");
-  ros::NodeHandle nh;
+  rclcpp::init(argc, argv);
+  auto node = std::make_shared<rclcpp::Node>("save_clusters_node");
 
   string topic_clouds = "/velodyne_points";
 
-  CloudOdomRosSubscriber subscriber(&nh, *proj_params_ptr, topic_clouds);
+  CloudOdomRosSubscriber subscriber(node, *proj_params_ptr, topic_clouds);
 
   int min_cluster_size = 20;
   int max_cluster_size = 100000;
@@ -106,6 +107,7 @@ int main(int argc, char* argv[]) {
           angle_tollerance.ToDegrees());
 
   subscriber.StartListeningToRos();
-  ros::spin();
+  rclcpp::spin(node);
+  rclcpp::shutdown();
   return 0;
 }

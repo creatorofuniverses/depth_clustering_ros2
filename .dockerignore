@@ -1,0 +1,29 @@
+# Build artifacts
+build/
+devel/
+install/
+log/
+lib/
+bin/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Data
+data/
+output/
+clusters/
+original_cloud/
+
+# Git
+.git/
+.gitignore
+
+# Documentation
+doc/
+*.md
+!README_ROS2.md

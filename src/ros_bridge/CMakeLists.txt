@@ -21,5 +21,15 @@
 add_library(ros_bridge SHARED cloud_odom_ros_subscriber.cpp)
 target_link_libraries(ros_bridge
                       identifiable
-                      ${catkin_LIBRARIES}
+                      ${rclcpp_LIBRARIES}
+                      ${sensor_msgs_LIBRARIES}
+                      ${nav_msgs_LIBRARIES}
+                      ${message_filters_LIBRARIES}
+                      ${tf2_eigen_LIBRARIES}
                       ${PCL_LIBRARIES})
+ament_target_dependencies(ros_bridge 
+                          rclcpp 
+                          sensor_msgs 
+                          nav_msgs 
+                          message_filters 
+                          tf2_eigen)

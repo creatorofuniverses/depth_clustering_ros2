@@ -18,11 +18,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-#include <ros/ros.h>
+#include <rclcpp/rclcpp.hpp>
 
 #include <qapplication.h>
 
 #include <string>
+#include <memory>
 
 #include "ros_bridge/cloud_odom_ros_subscriber.h"
 
@@ -80,12 +81,12 @@ int main(int argc, char* argv[]) {
 
   QApplication application(argc, argv);
 
-  ros::init(argc, argv, "show_objects_node");
-  ros::NodeHandle nh;
+  rclcpp::init(argc, argv);
+  auto node = std::make_shared<rclcpp::Node>("show_objects_node");
 
   string topic_clouds = "/velodyne_points";
 
-  CloudOdomRosSubscriber subscriber(&nh, *proj_params_ptr, topic_clouds);
+  CloudOdomRosSubscriber subscriber(node, *proj_params_ptr, topic_clouds);
   Visualizer visualizer;
   visualizer.show();
 
@@ -110,12 +111,16 @@ int main(int argc, char* argv[]) {
           angle_tollerance.ToDegrees());
 
   subscriber.StartListeningToRos();
-  ros::AsyncSpinner spinner(1);
-  spinner.start();
+  
+  // Create executor for ROS2 spinning in separate thread
+  rclcpp::executors::SingleThreadedExecutor executor;
+  executor.add_node(node);
+  std::thread spin_thread([&executor]() { executor.spin(); });
 
   auto exit_code = application.exec();
 
-  // if we close application, still wait for ros to shutdown
-  ros::waitForShutdown();
+  // Cleanup: shutdown ROS2
+  rclcpp::shutdown();
+  spin_thread.join();
   return exit_code;
 }

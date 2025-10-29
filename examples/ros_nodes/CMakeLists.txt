@@ -28,9 +28,10 @@ target_link_libraries(show_objects_node
                       visualization
                       ${MY_QT_LIBRARIES}
                       ${Boost_LIBRARIES}
-                      ${catkin_LIBRARIES}
+                      ${rclcpp_LIBRARIES}
                       ${PCL_LIBRARIES}
                       ${CMAKE_THREAD_LIBS_INIT})
+ament_target_dependencies(show_objects_node rclcpp sensor_msgs)
 
 if (${PCL_FOUND})
   add_executable(save_clusters_node save_clusters_node.cpp)
@@ -41,7 +42,8 @@ if (${PCL_FOUND})
                         ground_remove
                         cloud_saver
                         ${Boost_LIBRARIES}
-                        ${catkin_LIBRARIES}
+                        ${rclcpp_LIBRARIES}
                         ${OpenCV_LIBS}
                         ${PCL_LIBRARIES})
+  ament_target_dependencies(save_clusters_node rclcpp sensor_msgs)
 endif()
