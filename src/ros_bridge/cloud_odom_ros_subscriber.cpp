@@ -19,7 +19,7 @@
 // DEALINGS IN THE SOFTWARE.
 
 #include "ros_bridge/cloud_odom_ros_subscriber.h"
-#include <eigen_conversions/eigen_msg.h>
+#include <tf2_eigen/tf2_eigen.hpp>
 
 #include <vector>
 #include <string>
@@ -29,13 +29,11 @@
 
 namespace depth_clustering {
 
-using ros::NodeHandle;
 using message_filters::Subscriber;
 using message_filters::Synchronizer;
 using message_filters::sync_policies::ApproximateTime;
-using nav_msgs::Odometry;
-using sensor_msgs::PointCloud2;
-using sensor_msgs::PointCloud2ConstPtr;
+using nav_msgs::msg::Odometry;
+using sensor_msgs::msg::PointCloud2;
 
 using std::vector;
 using std::string;
@@ -56,9 +54,9 @@ T BytesTo(const vector<uint8_t>& data, uint32_t start_idx) {
   return result;
 }
 
-void PrintMsgStats(const sensor_msgs::PointCloud2ConstPtr& msg) {
+void PrintMsgStats(const sensor_msgs::msg::PointCloud2::ConstSharedPtr& msg) {
   fprintf(stderr, "<<<<<<<<<<<<<<< new cloud >>>>>>>>>>>>>>>\n");
-  fprintf(stderr, "received msg   %d\n", msg->header.seq);
+  fprintf(stderr, "received timestamp: %d.%d\n", msg->header.stamp.sec, msg->header.stamp.nanosec);
   fprintf(stderr, "height:        %d\n", msg->height);
   fprintf(stderr, "width:         %d\n", msg->width);
   fprintf(stderr, "num of fields: %lu\n", msg->fields.size());
@@ -78,12 +76,12 @@ void PrintMsgStats(const sensor_msgs::PointCloud2ConstPtr& msg) {
   fprintf(stderr, "=========================================\n");
 }
 
-CloudOdomRosSubscriber::CloudOdomRosSubscriber(NodeHandle* node_handle,
+CloudOdomRosSubscriber::CloudOdomRosSubscriber(rclcpp::Node::SharedPtr node,
                                                const ProjectionParams& params,
                                                const string& topic_clouds,
                                                const string& topic_odom)
     : AbstractSender{SenderType::STREAMER}, _params{params} {
-  _node_handle = node_handle;
+  _node = node;
   _topic_clouds = topic_clouds;
   _topic_odom = topic_odom;
   _msg_queue_size = 100;
@@ -95,24 +93,26 @@ CloudOdomRosSubscriber::CloudOdomRosSubscriber(NodeHandle* node_handle,
 
 void CloudOdomRosSubscriber::StartListeningToRos() {
   if (!_topic_odom.empty()) {
-    _subscriber_clouds = new Subscriber<PointCloud2>(
-        *_node_handle, _topic_clouds, _msg_queue_size);
-    _subscriber_odom =
-        new Subscriber<Odometry>(*_node_handle, _topic_odom, _msg_queue_size);
-    _sync = new Synchronizer<ApproximateTimePolicy>(
+    _subscriber_clouds = std::make_shared<Subscriber<PointCloud2, rclcpp::Node>>(
+        _node, _topic_clouds, rmw_qos_profile_sensor_data);
+    _subscriber_odom = std::make_shared<Subscriber<Odometry, rclcpp::Node>>(
+        _node, _topic_odom, rmw_qos_profile_default);
+    _sync = std::make_shared<Synchronizer<ApproximateTimePolicy>>(
         ApproximateTimePolicy(100), *_subscriber_clouds, *_subscriber_odom);
     _sync->registerCallback(
-        boost::bind(&CloudOdomRosSubscriber::Callback, this, _1, _2));
+        std::bind(&CloudOdomRosSubscriber::Callback, this, 
+                  std::placeholders::_1, std::placeholders::_2));
   } else {
-    _subscriber_clouds = new Subscriber<PointCloud2>(
-        *_node_handle, _topic_clouds, _msg_queue_size);
+    _subscriber_clouds = std::make_shared<Subscriber<PointCloud2, rclcpp::Node>>(
+        _node, _topic_clouds, rmw_qos_profile_sensor_data);
     _subscriber_clouds->registerCallback(
-        &CloudOdomRosSubscriber::CallbackVelodyne, this);
+        std::bind(&CloudOdomRosSubscriber::CallbackVelodyne, this, 
+                  std::placeholders::_1));
   }
 }
 
-void CloudOdomRosSubscriber::Callback(const PointCloud2::ConstPtr& msg_cloud,
-                                      const Odometry::ConstPtr& msg_odom) {
+void CloudOdomRosSubscriber::Callback(const PointCloud2::ConstSharedPtr& msg_cloud,
+                                      const Odometry::ConstSharedPtr& msg_odom) {
   // PrintMsgStats(msg_cloud);
   Cloud::Ptr cloud_ptr = RosCloudToCloud(msg_cloud);
   cloud_ptr->SetPose(RosOdomToPose(msg_odom));
@@ -121,24 +121,24 @@ void CloudOdomRosSubscriber::Callback(const PointCloud2::ConstPtr& msg_cloud,
 }
 
 void CloudOdomRosSubscriber::CallbackVelodyne(
-    const PointCloud2::ConstPtr& msg_cloud) {
+    const PointCloud2::ConstSharedPtr& msg_cloud) {
   // PrintMsgStats(msg_cloud);
   Cloud::Ptr cloud_ptr = RosCloudToCloud(msg_cloud);
   cloud_ptr->InitProjection(_params);
   ShareDataWithAllClients(*cloud_ptr);
 }
 
-Pose CloudOdomRosSubscriber::RosOdomToPose(const Odometry::ConstPtr& msg) {
+Pose CloudOdomRosSubscriber::RosOdomToPose(const Odometry::ConstSharedPtr& msg) {
   Pose pose;
   // we want float, so some casting is needed
   Eigen::Affine3d pose_double;
-  tf::poseMsgToEigen(msg->pose.pose, pose_double);
+  pose_double = tf2::transformToEigen(msg->pose.pose);
   pose = pose_double.cast<float>();
   return pose;
 }
 
 Cloud::Ptr CloudOdomRosSubscriber::RosCloudToCloud(
-    const PointCloud2::ConstPtr& msg) {
+    const PointCloud2::ConstSharedPtr& msg) {
   uint32_t x_offset = msg->fields[0].offset;
   uint32_t y_offset = msg->fields[1].offset;
   uint32_t z_offset = msg->fields[2].offset;
