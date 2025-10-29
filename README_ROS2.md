@@ -163,8 +163,10 @@ sudo apt-get install -y \
     libopencv-dev \
     libpcl-dev \
     libqglviewer-dev-qt5 \
-    qt5-default \
     qtbase5-dev \
+    qt5-qmake \
+    qtbase5-dev-tools \
+    libqt5opengl5-dev \
     ros-humble-tf2-eigen \
     ros-humble-message-filters \
     ros-humble-sensor-msgs \
@@ -396,7 +398,9 @@ sudo apt-get install ros-humble-tf2-eigen
 
 **Qt linking errors:**
 ```bash
-sudo apt-get install qt5-default qtbase5-dev libqglviewer-dev-qt5
+# Note: qt5-default is not available in Ubuntu 22.04+
+sudo apt-get install qtbase5-dev qt5-qmake qtbase5-dev-tools \
+                     libqt5opengl5-dev libqglviewer-dev-qt5
 ```
 
 ### Runtime Issues

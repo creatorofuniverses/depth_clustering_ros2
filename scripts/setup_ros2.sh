@@ -31,6 +31,9 @@ sudo apt-get install -y \
     libpcl-dev \
     libqglviewer-dev-qt5 \
     qtbase5-dev \
+    qt5-qmake \
+    qtbase5-dev-tools \
+    libqt5opengl5-dev \
     ros-humble-tf2-eigen \
     ros-humble-message-filters \
     ros-humble-sensor-msgs \

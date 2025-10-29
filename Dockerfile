@@ -15,11 +15,11 @@ RUN apt-get update && apt-get install -y \
     libopencv-dev \
     libpcl-dev \
     libqglviewer-dev-qt5 \
-    qt5-default \
     qtbase5-dev \
     qtdeclarative5-dev \
     libqt5opengl5-dev \
-    libqt5widgets5 \
+    qt5-qmake \
+    qtbase5-dev-tools \
     ros-${ROS_DISTRO}-tf2-eigen \
     ros-${ROS_DISTRO}-message-filters \
     ros-${ROS_DISTRO}-sensor-msgs \
