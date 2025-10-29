@@ -30,11 +30,11 @@ target_link_libraries(depth_clustering_test
                     image_labeler
                     ground_remove
                     difference
-                    ${catkin_LIBRARIES}
+                    )
                     ${PCL_LIBRARIES}
                     ${OpenCV_LIBS}
                     ${GTEST_LIBRARIES})
 
-# this will go away once we get rid of catkin
+# Note: catkin removed for ROS2 compatibility
 add_test(test_clustering
          ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/depth_clustering_test)

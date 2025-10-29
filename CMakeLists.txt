@@ -90,7 +90,21 @@ if(${DISTRO} MATCHES "14.04")
       Qt4::QtXml
       Qt4::QtOpenGL
       Qt4::QtGui)
-elseif(${DISTRO} MATCHES "16.04" OR ${DISTRO} MATCHES "18.04")
+elseif(${DISTRO} MATCHES "16.04" OR ${DISTRO} MATCHES "18.04" OR ${DISTRO} MATCHES "22.04")
+  find_package(Qt5 REQUIRED COMPONENTS Core Xml OpenGL Gui Widgets)
+  include_directories(${Qt5Core_INCLUDE_DIRS}
+                      ${Qt5Xml_INCLUDE_DIRS}
+                      ${Qt5Gui_INCLUDE_DIRS}
+                      ${Qt5Widgets_INCLUDE_DIRS}
+                      ${Qt5OpenGL_INCLUDE_DIRS})
+  set(MY_QT_LIBRARIES
+      ${Qt5Widgets_LIBRARIES}
+      ${Qt5Core_LIBRARIES}
+      ${Qt5Gui_LIBRARIES}
+      ${Qt5Xml_LIBRARIES}
+      ${Qt5OpenGL_LIBRARIES})
+else()
+  # Default to Qt5 for newer distributions
   find_package(Qt5 REQUIRED COMPONENTS Core Xml OpenGL Gui Widgets)
   include_directories(${Qt5Core_INCLUDE_DIRS}
                       ${Qt5Xml_INCLUDE_DIRS}
@@ -109,18 +123,26 @@ endif()
 message(STATUS "Linking against Qt libs: ${MY_QT_LIBRARIES}")
 message(STATUS "Linking against QGlViewer lib: ${QGLVIEWER_LIBRARY}")
 
-## Find catkin macros and libraries
-## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
-## is used, also find other catkin packages
-find_package(catkin COMPONENTS
-  roscpp
-  sensor_msgs
-  std_msgs
-  nav_msgs
-  message_filters
-  tf
-  eigen_conversions
-)
+## Find ament_cmake and ROS2 packages
+find_package(ament_cmake QUIET)
+
+if(ament_cmake_FOUND)
+  message(STATUS "ROS2 (ament_cmake) found, building ROS2 related parts")
+  find_package(rclcpp REQUIRED)
+  find_package(sensor_msgs REQUIRED)
+  find_package(std_msgs REQUIRED)
+  find_package(nav_msgs REQUIRED)
+  find_package(message_filters REQUIRED)
+  find_package(tf2 REQUIRED)
+  find_package(tf2_ros REQUIRED)
+  find_package(tf2_eigen REQUIRED)
+  set(ROS_FOUND YES)
+  set(ROS2_FOUND YES)
+else()
+  message(WARNING "ROS2 (ament_cmake) NOT FOUND. NOT building ROS related parts!")
+  set(ROS_FOUND NO)
+  set(ROS2_FOUND NO)
+endif()
 
 # add some useful constants to configuration
 configure_file(config/cmake_config.h.in
@@ -130,42 +152,10 @@ include_directories(config)
 
 if (${PCL_FOUND})
   message(STATUS "PCL is found. PCL-related code will be built.")
-  if (${CMAKE_BUILD_TYPE} MATCHES "Debug" AND ${DISTRO} MATCHES "14.04")
-    message(FATAL_ERROR
-            "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n"
-            "You are building PCL in Debug mode with C++11 enabled.\n"
-            "This causes segmentation fault due to a bug in PCL.\n"
-            "Build in Release mode to avoid this bug.\n"
-            "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-  endif()
   add_definitions(-DPCL_FOUND)
 else()
   message(WARNING "PCL NOT FOUND! PCL-related code WILL NOT be built")
 endif()
-
-if(${roscpp_FOUND})
-  message(STATUS "ROS found, building ROS related parts")
-  set(ROS_FOUND YES)
-else()
-  message(WARNING "ROS NOT FOUND. NOT building ROS related parts!")
-  set(ROS_FOUND NO)
-endif()
-
-catkin_package(
- INCLUDE_DIRS src
- LIBRARIES
-      cloud
-      identifiable
-      ground_remove
-      difference
-      image_labeler
-      projections
-      ros_bridge
-      velodyne_utils
-      folder_reader
-      visualization
- CATKIN_DEPENDS roscpp sensor_msgs std_msgs nav_msgs message_filters tf
-)
 
 include_directories(
   src
@@ -178,7 +168,6 @@ include_directories(
   SYSTEM ${OpenCV_INCLUDE_DIRS}
   SYSTEM ${OpenGL_INCLUDE_DIRS}
   SYSTEM ${QGLVIEWER_INCLUDE_DIR}
-  SYSTEM ${catkin_INCLUDE_DIRS}
 )
 
 add_subdirectory(src)
@@ -187,4 +176,9 @@ add_subdirectory(examples)
 message(STATUS "BUILD_TESTING: ${BUILD_TESTING}")
 if (${BUILD_TESTING})
   add_subdirectory(test)
+endif()
+
+# ROS2 ament_cmake package configuration
+if(ament_cmake_FOUND)
+  ament_package()
 endif()
