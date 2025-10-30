@@ -30,6 +30,12 @@ target_link_libraries(show_objects_node
                       ${PCL_LIBRARIES}
                       ${CMAKE_THREAD_LIBS_INIT})
 ament_target_dependencies(show_objects_node rclcpp sensor_msgs)
+# Check if autoware_perception_msgs is available and enable cluster publisher
+find_package(autoware_perception_msgs QUIET)
+if(autoware_perception_msgs_FOUND)
+  target_compile_definitions(show_objects_node PRIVATE AUTOWARE_PERCEPTION_MSGS_FOUND CLUSTER_PUBLISHER_ENABLED)
+  ament_target_dependencies(show_objects_node autoware_perception_msgs)
+endif()
 if(ament_cmake_FOUND)
   install(TARGETS show_objects_node
           DESTINATION lib/${PROJECT_NAME})

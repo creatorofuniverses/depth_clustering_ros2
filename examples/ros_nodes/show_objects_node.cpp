@@ -24,6 +24,9 @@
 #include <memory>
 
 #include "ros_bridge/cloud_odom_ros_subscriber.h"
+#ifdef CLUSTER_PUBLISHER_ENABLED
+#include "ros_bridge/cluster_publisher.h"
+#endif
 
 #include "clusterers/image_based_clusterer.h"
 #include "ground_removal/depth_ground_remover.h"
@@ -114,7 +117,7 @@ int main(int argc, char* argv[]) {
   rclcpp::init(argc, argv);
   auto node = std::make_shared<rclcpp::Node>("show_objects_node");
 
-  string topic_clouds = "/velodyne_points";
+  string topic_clouds = "/ouster/points";
 
   CloudOdomRosSubscriber subscriber(node, *proj_params_ptr, topic_clouds);
 
@@ -132,6 +135,15 @@ int main(int argc, char* argv[]) {
 
   subscriber.AddClient(&depth_ground_remover);
   depth_ground_remover.AddClient(&clusterer);
+
+#ifdef CLUSTER_PUBLISHER_ENABLED
+  // Create cluster publisher
+  ClusterPublisher cluster_publisher(node, "/detection/objects");
+  clusterer.AddClient(&cluster_publisher);
+  fprintf(stderr, "INFO: ✓ Cluster publisher enabled - publishing to /detection/objects\n");
+#else
+  fprintf(stderr, "WARNING: ✗ Cluster publisher disabled - autoware_perception_msgs not found\n");
+#endif
 
   fprintf(stderr, "INFO: Running with angle tolerance: %f degrees\n",
           angle_tollerance.ToDegrees());

@@ -18,9 +18,12 @@
 ## FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 ## DEALINGS IN THE SOFTWARE.
 
-add_library(ros_bridge SHARED cloud_odom_ros_subscriber.cpp)
+add_library(ros_bridge SHARED 
+            cloud_odom_ros_subscriber.cpp
+            cluster_publisher.cpp)
 target_link_libraries(ros_bridge
                       identifiable
+                      bbox
                       ${rclcpp_LIBRARIES}
                       ${sensor_msgs_LIBRARIES}
                       ${nav_msgs_LIBRARIES}
@@ -33,6 +36,15 @@ ament_target_dependencies(ros_bridge
                           nav_msgs 
                           message_filters 
                           tf2_eigen)
+# Find autoware_perception_msgs if available
+find_package(autoware_perception_msgs QUIET)
+if(autoware_perception_msgs_FOUND)
+  ament_target_dependencies(ros_bridge autoware_perception_msgs)
+  target_compile_definitions(ros_bridge PRIVATE AUTOWARE_PERCEPTION_MSGS_FOUND)
+  message(STATUS "autoware_perception_msgs found - cluster publishing enabled")
+else()
+  message(WARNING "autoware_perception_msgs not found - cluster publishing disabled")
+endif()
 if(ament_cmake_FOUND)
   install(TARGETS ros_bridge
           ARCHIVE DESTINATION lib
