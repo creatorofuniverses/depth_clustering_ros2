@@ -33,7 +33,9 @@ services:
 
   # RViz2 for visualization
   rviz2:
-    image: ros:humble-perception
+    build:
+      context: .
+      dockerfile: Dockerfile.rviz2
     container_name: rviz2
     network_mode: host
     privileged: true
@@ -46,7 +48,11 @@ services:
       - ./config:/config:ro
     command: >
       bash -c "source /opt/ros/humble/setup.bash &&
-               rviz2 -d /config/depth_clustering.rviz"
+               if [ -f /config/depth_clustering.rviz ]; then
+                 ros2 run rviz2 rviz2 -d /config/depth_clustering.rviz;
+               else
+                 ros2 run rviz2 rviz2;
+               fi"
     profiles:
       - visualization
 

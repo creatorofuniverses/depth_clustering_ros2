@@ -1,0 +1,8 @@
+# Dockerfile for RViz2 visualization
+FROM ros:humble-perception
+
+# Install RViz2 and desktop dependencies
+RUN apt-get update && apt-get install -y \
+    ros-humble-rviz2 \
+    && rm -rf /var/lib/apt/lists/*
+
