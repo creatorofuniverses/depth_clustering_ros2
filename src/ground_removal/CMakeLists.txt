@@ -25,3 +25,9 @@ target_link_libraries(ground_remove
                       difference
                       ${PCL_LIBRARIES}
                       ${OpenCV_LIBS})
+if(ament_cmake_FOUND)
+  install(TARGETS ground_remove
+          ARCHIVE DESTINATION lib
+          LIBRARY DESTINATION lib
+          RUNTIME DESTINATION bin)
+endif()

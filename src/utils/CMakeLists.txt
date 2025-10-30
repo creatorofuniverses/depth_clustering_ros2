@@ -23,6 +23,12 @@ target_link_libraries(cloud
                       projections
                       ${OpenCV_LIBS}
                       ${PCL_LIBRARIES})
+if(ament_cmake_FOUND)
+  install(TARGETS cloud
+          ARCHIVE DESTINATION lib
+          LIBRARY DESTINATION lib
+          RUNTIME DESTINATION bin)
+endif()
 
 add_library(velodyne_utils SHARED velodyne_utils.cpp)
 target_link_libraries(velodyne_utils
@@ -30,6 +36,12 @@ target_link_libraries(velodyne_utils
                       cloud
                       ${PCL_LIBRARIES}
                       ${OpenCV_LIBS})
+if(ament_cmake_FOUND)
+  install(TARGETS velodyne_utils
+          ARCHIVE DESTINATION lib
+          LIBRARY DESTINATION lib
+          RUNTIME DESTINATION bin)
+endif()
 
 find_package(Boost REQUIRED COMPONENTS filesystem regex)
 add_library(folder_reader SHARED folder_reader.cpp)

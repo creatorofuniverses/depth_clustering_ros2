@@ -25,3 +25,9 @@ add_library(projections SHARED
             spherical_projection.cpp)
 
 target_link_libraries(projections ${OpenCV_LIBS})
+if(ament_cmake_FOUND)
+  install(TARGETS projections
+          ARCHIVE DESTINATION lib
+          LIBRARY DESTINATION lib
+          RUNTIME DESTINATION bin)
+endif()

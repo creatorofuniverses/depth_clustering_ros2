@@ -18,4 +18,10 @@ if(${PCL_FOUND})
                         ${PCL_LIBRARIES} 
                         ${OpenCV_LIBS}
                         ${Boost_LIBRARIES})
+  if(ament_cmake_FOUND)
+    install(TARGETS cloud_saver
+            ARCHIVE DESTINATION lib
+            LIBRARY DESTINATION lib
+            RUNTIME DESTINATION bin)
+  endif()
 endif()

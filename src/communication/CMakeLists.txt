@@ -19,3 +19,9 @@
 ## DEALINGS IN THE SOFTWARE.
 
 add_library(identifiable SHARED identifiable.cpp)
+if(ament_cmake_FOUND)
+  install(TARGETS identifiable
+          ARCHIVE DESTINATION lib
+          LIBRARY DESTINATION lib
+          RUNTIME DESTINATION bin)
+endif()

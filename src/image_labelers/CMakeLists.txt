@@ -22,3 +22,9 @@ add_subdirectory(diff_helpers)
 
 add_library(image_labeler SHARED abstract_image_labeler.cpp)
 target_link_libraries(image_labeler difference)
+if(ament_cmake_FOUND)
+  install(TARGETS image_labeler
+          ARCHIVE DESTINATION lib
+          LIBRARY DESTINATION lib
+          RUNTIME DESTINATION bin)
+endif()

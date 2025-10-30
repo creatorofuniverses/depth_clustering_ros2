@@ -30,6 +30,10 @@ target_link_libraries(show_objects_node
                       ${PCL_LIBRARIES}
                       ${CMAKE_THREAD_LIBS_INIT})
 ament_target_dependencies(show_objects_node rclcpp sensor_msgs)
+if(ament_cmake_FOUND)
+  install(TARGETS show_objects_node
+          DESTINATION lib/${PROJECT_NAME})
+endif()
 
 if (${PCL_FOUND})
   add_executable(save_clusters_node save_clusters_node.cpp)
@@ -44,4 +48,8 @@ if (${PCL_FOUND})
                         ${OpenCV_LIBS}
                         ${PCL_LIBRARIES})
   ament_target_dependencies(save_clusters_node rclcpp sensor_msgs)
+  if(ament_cmake_FOUND)
+    install(TARGETS save_clusters_node
+            DESTINATION lib/${PROJECT_NAME})
+  endif()
 endif()

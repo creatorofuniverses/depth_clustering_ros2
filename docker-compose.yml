@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # Main depth clustering service (configured for Ouster OS1-64, headless)
   depth_clustering:

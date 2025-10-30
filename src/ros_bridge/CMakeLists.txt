@@ -33,3 +33,9 @@ ament_target_dependencies(ros_bridge
                           nav_msgs 
                           message_filters 
                           tf2_eigen)
+if(ament_cmake_FOUND)
+  install(TARGETS ros_bridge
+          ARCHIVE DESTINATION lib
+          LIBRARY DESTINATION lib
+          RUNTIME DESTINATION bin)
+endif()

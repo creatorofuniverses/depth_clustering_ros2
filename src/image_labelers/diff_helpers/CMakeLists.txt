@@ -21,3 +21,9 @@
 add_library(difference SHARED
             angle_diff.cpp
             line_dist_diff.cpp)
+if(ament_cmake_FOUND)
+  install(TARGETS difference
+          ARCHIVE DESTINATION lib
+          LIBRARY DESTINATION lib
+          RUNTIME DESTINATION bin)
+endif()
