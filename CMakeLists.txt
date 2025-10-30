@@ -37,7 +37,8 @@ set(CMAKE_CXX_FLAGS "-Wall -Wextra -fPIC")
 set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
-cmake_policy(SET CMP0045 OLD)
+# CMP0045: MACOSX_RPATH - modern CMake handles this automatically
+# Removed deprecated OLD policy setting
 
 SET(CMAKE_MODULE_PATH
       ${CMAKE_MODULE_PATH}

@@ -24,9 +24,11 @@ add_subdirectory(image_labelers)
 add_subdirectory(projections)
 add_subdirectory(utils)
 
-# Qt and visualization disabled for headless ROS2 deployment
-# add_subdirectory(visualization)
+# Qt disabled for headless ROS2 deployment
 # add_subdirectory(qt)
+
+# Visualization directory includes cloud_saver (no Qt dependency)
+add_subdirectory(visualization)
 
 if(ROS_FOUND)
   add_subdirectory(ros_bridge)

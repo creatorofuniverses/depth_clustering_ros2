@@ -20,6 +20,7 @@
 
 #include "visualization/cloud_saver.h"
 
+#include <boost/filesystem.hpp>
 #include <string>
 
 namespace depth_clustering {

@@ -21,7 +21,6 @@
 #include "./abstract_image_labeler.h"
 
 #include <opencv2/opencv.hpp>
-#include <opencv/highgui.h>
 
 #include <memory>
 #include <queue>

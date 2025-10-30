@@ -20,6 +20,7 @@
 
 #include "ros_bridge/cloud_odom_ros_subscriber.h"
 #include <tf2_eigen/tf2_eigen.hpp>
+#include <Eigen/Geometry>
 
 #include <vector>
 #include <string>
@@ -129,12 +130,12 @@ void CloudOdomRosSubscriber::CallbackVelodyne(
 }
 
 Pose CloudOdomRosSubscriber::RosOdomToPose(const Odometry::ConstSharedPtr& msg) {
-  Pose pose;
-  // we want float, so some casting is needed
-  Eigen::Affine3d pose_double;
-  pose_double = tf2::transformToEigen(msg->pose.pose);
-  pose = pose_double.cast<float>();
-  return pose;
+  // Convert geometry_msgs::msg::Pose to Eigen::Affine3f
+  const auto& p = msg->pose.pose;
+  Eigen::Translation3f translation(p.position.x, p.position.y, p.position.z);
+  Eigen::Quaternionf rotation(p.orientation.w, p.orientation.x, p.orientation.y, p.orientation.z);
+  Eigen::Affine3f transform = translation * rotation;
+  return Pose(transform);
 }
 
 Cloud::Ptr CloudOdomRosSubscriber::RosCloudToCloud(

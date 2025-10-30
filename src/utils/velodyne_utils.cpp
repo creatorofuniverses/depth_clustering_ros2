@@ -24,7 +24,6 @@
 #include <boost/algorithm/string/predicate.hpp>
 
 #include <opencv2/opencv.hpp>
-#include <opencv/highgui.h>
 
 #include <cassert>
 #include <fstream>
@@ -113,7 +112,7 @@ cv::Mat FixKITTIDepth(const cv::Mat& original) {
 }
 
 cv::Mat MatFromDepthPng(const string& path) {
-  cv::Mat depth_image = cv::imread(path, CV_LOAD_IMAGE_ANYDEPTH);
+  cv::Mat depth_image = cv::imread(path, cv::IMREAD_ANYDEPTH);
   depth_image.convertTo(depth_image, CV_32F);
   depth_image /= 500.;
   return FixKITTIDepth(depth_image);
